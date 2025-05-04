@@ -10,7 +10,12 @@ const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ?
 
 module.exports = async (req, res) => {
   // Log the incoming request for debugging
-  console.log("Incoming request:", req.query, req.headers);
+  console.log("Incoming request:", {
+    method: req.method,
+    url: req.url,
+    query: req.query,
+    headers: req.headers
+  });
 
   // Check for API key in query or headers
   const apiKey = req.query.apiKey || req.headers['x-api-key'];
@@ -64,30 +69,34 @@ module.exports = async (req, res) => {
     // Forward the request body for methods that support it
     if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
       if (req.body) {
-        fetchOptions.body = JSON.stringify(req.body);
-      } else if (req.rawBody) {
-        fetchOptions.body = req.rawBody;
+        // Make sure Content-Type is set for JSON body
+        if (typeof req.body === 'object') {
+          fetchOptions.body = JSON.stringify(req.body);
+          if (!fetchOptions.headers['content-type']) {
+            fetchOptions.headers['content-type'] = 'application/json';
+          }
+        } else if (req.rawBody) {
+          // For raw body data
+          fetchOptions.body = req.rawBody;
+        } else {
+          // For string body
+          fetchOptions.body = req.body;
+        }
       }
     }
 
     console.log("Fetching from target URL:", targetUrl);
-    console.log("Fetch options:", fetchOptions);
+    console.log("Fetch options:", JSON.stringify(fetchOptions, null, 2));
+    
     const response = await fetch(targetUrl, fetchOptions);
 
-    // Log the response headers for debugging
-    console.log("Response headers:", response.headers.raw());
-
-    // Handle JSONPlaceholder specifically
-    if (targetUrl.includes('jsonplaceholder.typicode.com')) {
-      const jsonData = await response.json(); // Directly parse as JSON
-      console.log("Handling JSONPlaceholder response:", jsonData);
-      res.setHeader('Content-Type', 'application/json');
-      return res.status(200).json(jsonData); // Use res.json to ensure proper formatting
-    }
-
-    // Handle based on content type
-    const contentType = response.headers.get('content-type') || '';
-    res.setHeader('Content-Type', contentType);
+    // Create response object
+    const responseData = {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Object.fromEntries(response.headers.entries())
+    };
+    console.log("Response metadata:", responseData);
 
     // Forward all response headers except for CORS headers
     for (const [key, value] of Object.entries(response.headers.raw())) {
@@ -96,22 +105,35 @@ module.exports = async (req, res) => {
       }
     }
 
+    // Handle based on content type
+    const contentType = response.headers.get('content-type') || '';
+    
     if (contentType.includes('application/json')) {
-      const jsonData = await response.json();
-      return res.status(response.status).json(jsonData);
+      try {
+        const jsonData = await response.json();
+        console.log("Returning JSON data");
+        return res.status(response.status).json(jsonData);
+      } catch (parseError) {
+        console.error("JSON parse error:", parseError);
+        const text = await response.text();
+        return res.status(response.status).send(text);
+      }
     } else if (contentType.includes('text')) {
       const text = await response.text();
+      console.log("Returning text data, length:", text.length);
       return res.status(response.status).send(text);
     } else {
       // Handle binary data (e.g., images, PDFs)
       const buffer = await response.buffer();
+      console.log("Returning binary data, size:", buffer.length);
       return res.status(response.status).send(buffer);
     }
   } catch (error) {
     console.error('Proxy error:', error);
     return res.status(500).json({ 
       error: 'Proxy request failed', 
-      message: error.message 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 };
