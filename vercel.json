@@ -1,7 +1,3 @@
 {
-    "version": 2,
-    "routes": [
-      { "src": "/api/test", "dest": "/api/test.js" },
-      { "src": "/api/proxy", "dest": "/api/proxy.js" }
-    ]
+    "version": 2
   }
