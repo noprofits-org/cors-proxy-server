@@ -4,9 +4,13 @@ const fetch = require('node-fetch');
 const API_KEY = process.env.PROXY_API_KEY || 'your-default-api-key';
 
 module.exports = async (req, res) => {
+  // Log the incoming request for debugging
+  console.log("Incoming request:", req.query, req.headers);
+
   // Check for API key in query or headers
   const apiKey = req.query.apiKey || req.headers['x-api-key'];
   if (!apiKey || apiKey !== API_KEY) {
+    console.log("API key check failed. Provided:", apiKey);
     return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
   }
 
@@ -25,25 +29,22 @@ module.exports = async (req, res) => {
     const targetUrl = req.query.url;
 
     if (!targetUrl) {
+      console.log("Missing URL parameter");
       return res.status(400).json({ error: 'URL parameter is required' });
     }
 
-    // Make the request to the target URL
+    console.log("Fetching from target URL:", targetUrl);
     const response = await fetch(targetUrl);
 
-    // Explicitly set the content type to JSON for JSONPlaceholder
+    // Log the response headers for debugging
+    console.log("Response headers:", response.headers.raw());
+
+    // Handle JSONPlaceholder specifically
     if (targetUrl.includes('jsonplaceholder.typicode.com')) {
-      const rawText = await response.text();
-      try {
-        const jsonData = JSON.parse(rawText);
-        console.log("Handling JSONPlaceholder response:", jsonData);
-        res.setHeader('Content-Type', 'application/json');
-        return res.status(200).send(JSON.stringify(jsonData));
-      } catch (e) {
-        console.log("JSON parsing failed:", e.message);
-        res.setHeader('Content-Type', 'text/plain');
-        return res.status(200).send(rawText);
-      }
+      const jsonData = await response.json(); // Directly parse as JSON
+      console.log("Handling JSONPlaceholder response:", jsonData);
+      res.setHeader('Content-Type', 'application/json');
+      return res.status(200).json(jsonData); // Use res.json to ensure proper formatting
     }
 
     // Handle based on content type
@@ -51,8 +52,8 @@ module.exports = async (req, res) => {
     res.setHeader('Content-Type', contentType);
 
     if (contentType.includes('application/json')) {
-      const rawText = await response.text();
-      return res.status(response.status).send(rawText);
+      const jsonData = await response.json();
+      return res.status(response.status).json(jsonData);
     } else if (contentType.includes('text')) {
       const text = await response.text();
       return res.status(response.status).send(text);
