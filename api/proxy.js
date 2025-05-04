@@ -5,7 +5,7 @@ module.exports = async (req, res) => {
   // Set CORS headers
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
-  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+  res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type,Authorization');
   
   // Handle preflight requests
   if (req.method === 'OPTIONS') {
@@ -22,39 +22,53 @@ module.exports = async (req, res) => {
     
     // Prepare headers to forward
     const headers = {};
-    Object.entries(req.headers).forEach(([key, value]) => {
+    for (const [key, value] of Object.entries(req.headers)) {
       // Skip headers that might cause issues
       if (!['host', 'connection', 'origin', 'referer'].includes(key.toLowerCase())) {
         headers[key] = value;
       }
-    });
+    }
     
     // Handle the request to the target URL
-    const response = await fetch(targetUrl, {
+    const fetchOptions = {
       method: req.method,
       headers,
-      body: req.method !== 'GET' && req.method !== 'HEAD' ? JSON.stringify(req.body) : undefined
-    });
+    };
     
-    // Get response headers
-    const responseHeaders = {};
-    response.headers.forEach((value, key) => {
+    // Add body for non-GET/HEAD requests if present
+    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
+      fetchOptions.body = JSON.stringify(req.body);
+    }
+    
+    const response = await fetch(targetUrl, fetchOptions);
+    
+    // Forward the status code
+    res.status(response.status);
+    
+    // Forward response headers
+    for (const [key, value] of response.headers.entries()) {
       // Skip headers that might cause issues
-      if (!['content-encoding', 'content-length', 'connection', 'access-control-allow-origin'].includes(key.toLowerCase())) {
-        responseHeaders[key] = value;
+      if (!['content-encoding', 'content-length', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) {
+        res.setHeader(key, value);
       }
-    });
+    }
     
-    // Set response headers
-    Object.entries(responseHeaders).forEach(([key, value]) => {
-      res.setHeader(key, value);
-    });
+    // Check content type to handle response appropriately
+    const contentType = response.headers.get('content-type') || '';
     
-    // Return the response
-    const data = await response.text();
-    return res.status(response.status).send(data);
+    if (contentType.includes('application/json')) {
+      const data = await response.json();
+      return res.json(data);
+    } else {
+      const data = await response.text();
+      return res.send(data);
+    }
   } catch (error) {
     console.error('Proxy error:', error);
-    return res.status(500).json({ error: 'Proxy request failed', details: error.message });
+    return res.status(500).json({ 
+      error: 'Proxy request failed', 
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
   }
 };
