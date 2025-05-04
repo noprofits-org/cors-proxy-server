@@ -20,55 +20,52 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'URL parameter is required' });
     }
     
-    // Prepare headers to forward
+    console.log(`Proxying request to: ${targetUrl}`);
+    
+    // Make the request to the target URL
+    const response = await fetch(targetUrl);
+    
+    // Get response status and headers
+    const status = response.status;
     const headers = {};
-    for (const [key, value] of Object.entries(req.headers)) {
-      // Skip headers that might cause issues
-      if (!['host', 'connection', 'origin', 'referer'].includes(key.toLowerCase())) {
+    
+    // Forward response headers except problematic ones
+    response.headers.forEach((value, key) => {
+      if (!['content-encoding', 'content-length', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) {
         headers[key] = value;
       }
-    }
+    });
     
-    // Handle the request to the target URL
-    const fetchOptions = {
-      method: req.method,
-      headers,
-    };
-    
-    // Add body for non-GET/HEAD requests if present
-    if (req.method !== 'GET' && req.method !== 'HEAD' && req.body) {
-      fetchOptions.body = JSON.stringify(req.body);
-    }
-    
-    const response = await fetch(targetUrl, fetchOptions);
-    
-    // Forward the status code
-    res.status(response.status);
-    
-    // Forward response headers
-    for (const [key, value] of response.headers.entries()) {
-      // Skip headers that might cause issues
-      if (!['content-encoding', 'content-length', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) {
-        res.setHeader(key, value);
-      }
-    }
-    
-    // Check content type to handle response appropriately
+    // Check if the response is JSON
     const contentType = response.headers.get('content-type') || '';
     
+    // Handle different content types
+    let responseData;
+    
     if (contentType.includes('application/json')) {
-      const data = await response.json();
-      return res.json(data);
+      responseData = await response.json();
+      res.status(status).json(responseData);
     } else {
-      const data = await response.text();
-      return res.send(data);
+      // For text responses
+      responseData = await response.text();
+      
+      // Set content type explicitly
+      res.setHeader('Content-Type', contentType || 'text/plain');
+      
+      // Set all other headers
+      Object.entries(headers).forEach(([key, value]) => {
+        if (key.toLowerCase() !== 'content-type') {
+          res.setHeader(key, value);
+        }
+      });
+      
+      res.status(status).send(responseData);
     }
   } catch (error) {
     console.error('Proxy error:', error);
     return res.status(500).json({ 
       error: 'Proxy request failed', 
-      message: error.message,
-      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      message: error.message
     });
   }
 };
