@@ -20,52 +20,35 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'URL parameter is required' });
     }
     
-    console.log(`Proxying request to: ${targetUrl}`);
-    
     // Make the request to the target URL
     const response = await fetch(targetUrl);
     
-    // Get response status and headers
-    const status = response.status;
-    const headers = {};
+    // Set the status code
+    res.status(response.status);
     
-    // Forward response headers except problematic ones
-    response.headers.forEach((value, key) => {
-      if (!['content-encoding', 'content-length', 'transfer-encoding', 'connection'].includes(key.toLowerCase())) {
-        headers[key] = value;
-      }
-    });
-    
-    // Check if the response is JSON
-    const contentType = response.headers.get('content-type') || '';
-    
-    // Handle different content types
-    let responseData;
-    
-    if (contentType.includes('application/json')) {
-      responseData = await response.json();
-      res.status(status).json(responseData);
-    } else {
-      // For text responses
-      responseData = await response.text();
-      
-      // Set content type explicitly
-      res.setHeader('Content-Type', contentType || 'text/plain');
-      
-      // Set all other headers
-      Object.entries(headers).forEach(([key, value]) => {
-        if (key.toLowerCase() !== 'content-type') {
-          res.setHeader(key, value);
-        }
-      });
-      
-      res.status(status).send(responseData);
+    // Get the content type
+    const contentType = response.headers.get('content-type');
+    if (contentType) {
+      res.setHeader('Content-Type', contentType);
     }
+    
+    // For JSONPlaceholder specifically, force JSON content type
+    if (targetUrl.includes('jsonplaceholder.typicode.com')) {
+      res.setHeader('Content-Type', 'application/json');
+      const text = await response.text();
+      return res.send(text);
+    }
+    
+    // Read the response as text
+    const text = await response.text();
+    
+    // Send the response
+    return res.send(text);
   } catch (error) {
     console.error('Proxy error:', error);
     return res.status(500).json({ 
       error: 'Proxy request failed', 
-      message: error.message
+      message: error.message 
     });
   }
 };
