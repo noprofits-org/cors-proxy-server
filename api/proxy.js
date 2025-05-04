@@ -4,8 +4,8 @@ const fetch = require('node-fetch');
 const API_KEY = process.env.PROXY_API_KEY || 'your-default-api-key';
 
 // Define allowed origins (can be customized via environment variables)
-const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ? 
-  process.env.ALLOWED_ORIGINS.split(',') : 
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ?
+  process.env.ALLOWED_ORIGINS.split(',') :
   ['*'];
 
 module.exports = async (req, res) => {
@@ -19,6 +19,8 @@ module.exports = async (req, res) => {
 
   // Check for API key in query or headers
   const apiKey = req.query.apiKey || req.headers['x-api-key'];
+  console.log("API Key validation check - Received key:", apiKey);
+  console.log("API Key validation check - Environment variable exists:", !!process.env.PROXY_API_KEY);
   if (!apiKey || apiKey !== API_KEY) {
     console.log("API key check failed. Provided:", apiKey);
     return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
@@ -32,7 +34,7 @@ module.exports = async (req, res) => {
     res.setHeader('Access-Control-Allow-Origin', origin);
     res.setHeader('Vary', 'Origin');
   }
-  
+
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-API-Key, X-Requested-With');
   res.setHeader('Access-Control-Allow-Credentials', 'true');
@@ -87,7 +89,7 @@ module.exports = async (req, res) => {
 
     console.log("Fetching from target URL:", targetUrl);
     console.log("Fetch options:", JSON.stringify(fetchOptions, null, 2));
-    
+
     const response = await fetch(targetUrl, fetchOptions);
 
     // Create response object
@@ -107,7 +109,7 @@ module.exports = async (req, res) => {
 
     // Handle based on content type
     const contentType = response.headers.get('content-type') || '';
-    
+
     if (contentType.includes('application/json')) {
       try {
         const jsonData = await response.json();
@@ -130,8 +132,8 @@ module.exports = async (req, res) => {
     }
   } catch (error) {
     console.error('Proxy error:', error);
-    return res.status(500).json({ 
-      error: 'Proxy request failed', 
+    return res.status(500).json({
+      error: 'Proxy request failed',
       message: error.message,
       stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
