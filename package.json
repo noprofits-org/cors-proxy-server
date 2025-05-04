@@ -1,0 +1,23 @@
+{
+    "name": "cors-proxy-server",
+    "version": "1.0.0",
+    "description": "A general-purpose CORS proxy using Vercel serverless functions",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "dependencies": {
+        "node-fetch": "^2.6.7"
+    },
+    "author": "",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/noprofits-org/cors-proxy-server.git"
+    },
+    "keywords": [],
+    "bugs": {
+        "url": "https://github.com/noprofits-org/cors-proxy-server/issues"
+    },
+    "homepage": "https://github.com/noprofits-org/cors-proxy-server#readme"
+}
