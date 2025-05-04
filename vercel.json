@@ -1,10 +1,15 @@
 {
     "version": 2,
+    "routes": [
+      { "src": "/api/test", "dest": "/api/test.js" },
+      { "src": "/api/proxy", "dest": "/api/proxy.js" }
+    ],
     "headers": [
       {
         "source": "/api/(.*)",
         "headers": [
-          { "key": "Content-Encoding", "value": "identity" }
+          { "key": "Content-Encoding", "value": "identity" },
+          { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate" }
         ]
       }
     ]
