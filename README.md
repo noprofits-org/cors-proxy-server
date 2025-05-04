@@ -7,9 +7,10 @@ A simple, general-purpose CORS proxy using Vercel serverless functions. This pro
 This proxy acts as a middleware between your frontend application and the target API:
 
 1. Your frontend makes a request to this proxy server
-2. The proxy server forwards your request to the target API
-3. The proxy server receives the response and adds CORS headers
-4. The proxy server sends the response back to your frontend
+2. The proxy server validates your API key for security
+3. The proxy server forwards your request to the target API
+4. The proxy server receives the response and adds CORS headers
+5. The proxy server sends the response back to your frontend
 
 ## Usage
 
@@ -18,10 +19,32 @@ This proxy acts as a middleware between your frontend application and the target
 To make a GET request through the proxy:
 
 ```javascript
-const PROXY_URL = 'https://cors-proxy-server-4fwyw5bst-peters-projects-2a69edc1.vercel.app/api/proxy';
+const PROXY_URL = 'https://your-proxy-url.vercel.app/api/proxy';
 const TARGET_API = 'https://api.example.com/data';
+const API_KEY = 'your-api-key';
 
-fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}`)
+fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}&apiKey=${API_KEY}`)
+  .then(response => response.json())
+  .then(data => {
+    console.log('Data:', data);
+  })
+  .catch(error => {
+    console.error('Error:', error);
+  });
+```
+
+Alternatively, you can pass the API key in the header:
+
+```javascript
+const PROXY_URL = 'https://your-proxy-url.vercel.app/api/proxy';
+const TARGET_API = 'https://api.example.com/data';
+const API_KEY = 'your-api-key';
+
+fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}`, {
+  headers: {
+    'X-API-Key': API_KEY
+  }
+})
   .then(response => response.json())
   .then(data => {
     console.log('Data:', data);
@@ -36,13 +59,15 @@ fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}`)
 To make a POST request through the proxy:
 
 ```javascript
-const PROXY_URL = 'https://cors-proxy-server-4fwyw5bst-peters-projects-2a69edc1.vercel.app/api/proxy';
+const PROXY_URL = 'https://your-proxy-url.vercel.app/api/proxy';
 const TARGET_API = 'https://api.example.com/data';
+const API_KEY = 'your-api-key';
 
 fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}`, {
   method: 'POST',
   headers: {
     'Content-Type': 'application/json',
+    'X-API-Key': API_KEY
   },
   body: JSON.stringify({ key: 'value' }),
 })
@@ -61,7 +86,14 @@ The proxy supports all standard HTTP methods (GET, POST, PUT, PATCH, DELETE, etc
 
 ### Passing Headers
 
-Headers from your request will be forwarded to the target API, except for headers that could cause issues (host, connection, origin, referer).
+Headers from your request will be forwarded to the target API, except for headers that could cause issues (host, connection, origin, referer, x-api-key).
+
+### Configuration Options
+
+You can configure the proxy using environment variables in your Vercel deployment:
+
+- `PROXY_API_KEY` - Required API key for authentication (default: 'your-default-api-key')
+- `ALLOWED_ORIGINS` - Comma-separated list of allowed origins for CORS (default: '*')
 
 ## Deploy Your Own
 
@@ -114,14 +146,20 @@ vercel dev
 
 ## Limitations
 
-- This is a general-purpose proxy and doesn't include advanced security features
-- Rate limiting is based on Vercel's free tier limits (currently 100 serverless function invocations per day)
-- Some APIs may still reject requests from the proxy server
-- Binary data (like images) may not be handled correctly
+- This is a general-purpose proxy and doesn't include advanced security features beyond API key authentication
+- Rate limiting is based on Vercel's free tier limits
+- Some APIs may still reject requests from the proxy server (due to server-side CORS checks or IP filtering)
+- Very large responses might hit Vercel's serverless function size limits
 
 ## Security Considerations
 
-Be aware that this proxy can be used by anyone who has access to the URL. Consider implementing authentication if you need to restrict access.
+This proxy includes basic API key authentication. Make sure to:
+
+1. Set a strong, unique `PROXY_API_KEY` in your Vercel environment variables
+2. Keep your API key secure and don't expose it in client-side code
+3. Consider restricting allowed origins with the `ALLOWED_ORIGINS` environment variable
+4. Monitor your proxy usage for unexpected traffic patterns
+5. Be aware that Vercel logs may contain sensitive information from proxied requests
 
 ## License
 
