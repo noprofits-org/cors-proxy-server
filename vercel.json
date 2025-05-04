@@ -2,6 +2,7 @@
     "version": 2,
     "routes": [
       { "src": "/api/test", "dest": "/api/test.js" },
+      { "src": "/api/env-test", "dest": "/api/env-test.js" },
       { "src": "/api/proxy", "dest": "/api/proxy.js" }
     ],
     "headers": [
