@@ -2,6 +2,10 @@
 
 A simple, general-purpose CORS proxy using Vercel serverless functions. This proxy allows you to make requests to APIs that don't support CORS from your frontend applications.
 
+## Demo
+
+A live version of this proxy is available at: [https://cors-proxy-server-umber.vercel.app/](https://cors-proxy-server-umber.vercel.app/)
+
 ## How It Works
 
 This proxy acts as a middleware between your frontend application and the target API:
@@ -19,9 +23,9 @@ This proxy acts as a middleware between your frontend application and the target
 To make a GET request through the proxy:
 
 ```javascript
-const PROXY_URL = 'https://your-proxy-url.vercel.app/api/proxy';
+const PROXY_URL = 'https://cors-proxy-server-umber.vercel.app/api/proxy';
 const TARGET_API = 'https://api.example.com/data';
-const API_KEY = 'your-api-key';
+const API_KEY = 'your-api-key'; // Set this in Vercel environment variables
 
 fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}&apiKey=${API_KEY}`)
   .then(response => response.json())
@@ -36,7 +40,7 @@ fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}&apiKey=${API_KEY}`)
 Alternatively, you can pass the API key in the header:
 
 ```javascript
-const PROXY_URL = 'https://your-proxy-url.vercel.app/api/proxy';
+const PROXY_URL = 'https://cors-proxy-server-umber.vercel.app/api/proxy';
 const TARGET_API = 'https://api.example.com/data';
 const API_KEY = 'your-api-key';
 
@@ -59,7 +63,7 @@ fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}`, {
 To make a POST request through the proxy:
 
 ```javascript
-const PROXY_URL = 'https://your-proxy-url.vercel.app/api/proxy';
+const PROXY_URL = 'https://cors-proxy-server-umber.vercel.app/api/proxy';
 const TARGET_API = 'https://api.example.com/data';
 const API_KEY = 'your-api-key';
 
@@ -84,15 +88,23 @@ fetch(`${PROXY_URL}?url=${encodeURIComponent(TARGET_API)}`, {
 
 The proxy supports all standard HTTP methods (GET, POST, PUT, PATCH, DELETE, etc.).
 
+### Content Type Handling
+
+The proxy correctly handles various content types:
+
+- JSON data (application/json)
+- Text content (text/plain, text/html, etc.)
+- Binary data (images, PDFs, etc.)
+
 ### Passing Headers
 
 Headers from your request will be forwarded to the target API, except for headers that could cause issues (host, connection, origin, referer, x-api-key).
 
-### Configuration Options
+## Configuration Options
 
 You can configure the proxy using environment variables in your Vercel deployment:
 
-- `PROXY_API_KEY` - Required API key for authentication (default: 'your-default-api-key')
+- `PROXY_API_KEY` - Required API key for authentication (must be set in Vercel environment variables)
 - `ALLOWED_ORIGINS` - Comma-separated list of allowed origins for CORS (default: '*')
 
 ## Deploy Your Own
@@ -107,8 +119,12 @@ You can configure the proxy using environment variables in your Vercel deploymen
 1. Fork this repository
 2. Connect your Vercel account to your GitHub account
 3. Import the forked repository as a new project in Vercel
-4. Deploy the project
-5. Use your new deployment URL as the CORS proxy
+4. Set your `PROXY_API_KEY` environment variable in Vercel:
+   - Go to your project settings
+   - Navigate to the Environment Variables section
+   - Add a variable with name `PROXY_API_KEY` and a secure value of your choice
+5. Deploy the project
+6. Use your new deployment URL as the CORS proxy
 
 Alternatively, you can clone this repository and deploy using the Vercel CLI:
 
@@ -122,6 +138,21 @@ npm install -g vercel
 
 # Deploy to Vercel
 vercel
+```
+
+## Troubleshooting
+
+If you're experiencing issues with the proxy, try these steps:
+
+1. Check that your API key matches the one set in your Vercel environment variables
+2. Verify that the target URL is correctly encoded
+3. Ensure you're using the correct content type headers
+4. Check your browser console for detailed error messages
+5. Test the endpoint directly in your browser or with cURL to isolate browser CORS issues
+
+Example cURL command for testing:
+```bash
+curl "https://your-proxy-url.vercel.app/api/proxy?url=https://api.example.com/data&apiKey=your-api-key"
 ```
 
 ## Local Development
