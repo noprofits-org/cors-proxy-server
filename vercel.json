@@ -9,17 +9,12 @@
     "routes": [
       {
         "src": "/api/(.*)",
-        "dest": "/api/proxy.js"
-      }
-    ],
-    "headers": [
-      {
-        "source": "/api/(.*)",
-        "headers": [
-          { "key": "Access-Control-Allow-Origin", "value": "*" },
-          { "key": "Access-Control-Allow-Methods", "value": "GET, POST, OPTIONS, PUT, PATCH, DELETE" },
-          { "key": "Access-Control-Allow-Headers", "value": "X-Requested-With, Content-Type, Accept, Authorization" }
-        ]
+        "dest": "/api/proxy.js",
+        "headers": {
+          "Access-Control-Allow-Origin": "*",
+          "Access-Control-Allow-Methods": "GET, POST, OPTIONS, PUT, PATCH, DELETE",
+          "Access-Control-Allow-Headers": "X-Requested-With, Content-Type, Accept, Authorization"
+        }
       }
     ]
   }
