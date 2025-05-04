@@ -19,5 +19,8 @@
     "bugs": {
         "url": "https://github.com/noprofits-org/cors-proxy-server/issues"
     },
+    "engines": {
+        "node": "18.x"
+    },
     "homepage": "https://github.com/noprofits-org/cors-proxy-server#readme"
 }
