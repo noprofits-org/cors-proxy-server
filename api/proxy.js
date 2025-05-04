@@ -1,45 +1,49 @@
-// api/proxy.js
 const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
+  // Set CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  
+  // Handle preflight requests
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+  
   try {
-    // Set CORS headers
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
-    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    // Get the target URL from the query parameter
+    const targetUrl = req.query.url;
     
-    // Handle OPTIONS requests (preflight)
-    if (req.method === 'OPTIONS') {
-      return res.status(200).end();
-    }
-    
-    const url = req.query.url;
-    
-    if (!url) {
+    if (!targetUrl) {
       return res.status(400).json({ error: 'URL parameter is required' });
     }
     
-    // Simple fetch request to the target URL
-    const response = await fetch(url);
+    // Make the request to the target URL
+    const response = await fetch(targetUrl);
     
-    // Special handling for JSONPlaceholder
-    if (url.includes('jsonplaceholder.typicode.com')) {
-      const json = await response.json();
-      return res.status(200).json(json);
+    // Explicitly set the content type to JSON for JSONPlaceholder
+    if (targetUrl.includes('jsonplaceholder.typicode.com')) {
+      // Read as text, then manually parse and stringify for safety
+      const rawText = await response.text();
+      try {
+        const jsonData = JSON.parse(rawText);
+        res.setHeader('Content-Type', 'application/json');
+        return res.status(200).send(JSON.stringify(jsonData));
+      } catch (e) {
+        // If parsing fails, return as plain text
+        res.setHeader('Content-Type', 'text/plain');
+        return res.status(200).send(rawText);
+      }
     }
     
-    // Get content type
-    const contentType = response.headers.get('content-type');
+    // Handle based on content type
+    const contentType = response.headers.get('content-type') || '';
+    res.setHeader('Content-Type', contentType);
     
-    // Set content type for the response
-    if (contentType) {
-      res.setHeader('Content-Type', contentType);
-    }
-    
-    // Choose processing based on content type
-    if (contentType && contentType.includes('application/json')) {
-      const json = await response.json();
-      return res.status(response.status).json(json);
+    if (contentType.includes('application/json')) {
+      const rawText = await response.text();
+      return res.status(response.status).send(rawText);
     } else {
       const text = await response.text();
       return res.status(response.status).send(text);
