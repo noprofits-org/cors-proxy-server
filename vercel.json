@@ -4,7 +4,6 @@
     { 
       "src": "/api/(.*)", 
       "headers": {
-        "Content-Encoding": "identity",
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
