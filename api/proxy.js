@@ -40,7 +40,7 @@ module.exports = async (req, res) => {
     };
 
     // Forward headers except those that could cause issues
-    const excludeHeaders = ['host', 'connection', 'origin', 'referer', 'x-api-key', 'content-encoding'];
+    const excludeHeaders = ['host', 'connection', 'origin', 'referer', 'x-api-key', 'content-encoding', 'content-length', 'transfer-encoding'];
     for (const [key, value] of Object.entries(req.headers)) {
       if (!excludeHeaders.includes(key.toLowerCase())) {
         fetchOptions.headers[key] = value;
@@ -48,31 +48,25 @@ module.exports = async (req, res) => {
     }
 
     // Forward the request body for methods that support it
-    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
-      if (req.body) {
-        if (typeof req.body === 'object') {
-          fetchOptions.body = JSON.stringify(req.body);
-          if (!fetchOptions.headers['content-type']) {
-            fetchOptions.headers['content-type'] = 'application/json';
-          }
-        } else if (req.rawBody) {
-          fetchOptions.body = req.rawBody;
-        } else {
-          fetchOptions.body = req.body;
+    if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
+      // Convert body to string if it's an object
+      if (typeof req.body === 'object') {
+        fetchOptions.body = JSON.stringify(req.body);
+        if (!fetchOptions.headers['content-type']) {
+          fetchOptions.headers['content-type'] = 'application/json';
         }
+      } else {
+        fetchOptions.body = req.body;
       }
     }
 
+    // Make the request to the target URL
     const response = await fetch(targetUrl, fetchOptions);
 
-    // Create response object
-    const responseData = {
-      status: response.status,
-      statusText: response.statusText
-    };
+    // Forward response status
+    res.status(response.status);
 
-    // IMPORTANT: Never forward content-encoding headers
-    // as they can cause ERR_CONTENT_DECODING_FAILED
+    // Forward headers, except those related to CORS or encoding
     for (const [key, value] of Object.entries(response.headers.raw())) {
       if (!key.toLowerCase().startsWith('access-control-') && 
           key.toLowerCase() !== 'content-encoding') {
@@ -80,27 +74,27 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Explicitly remove content-encoding header if it was set somehow
+    // Explicitly remove content-encoding header
     res.removeHeader('content-encoding');
 
-    // Handle based on content type
+    // Handle different content types appropriately
     const contentType = response.headers.get('content-type') || '';
-
+    
     if (contentType.includes('application/json')) {
       try {
         const jsonData = await response.json();
-        return res.status(response.status).json(jsonData);
-      } catch (parseError) {
+        return res.json(jsonData);
+      } catch (error) {
         const text = await response.text();
-        return res.status(response.status).send(text);
+        return res.send(text);
       }
-    } else if (contentType.includes('text')) {
+    } else if (contentType.includes('text/')) {
       const text = await response.text();
-      return res.status(response.status).send(text);
+      return res.send(text);
     } else {
-      // Handle binary data (e.g., images, PDFs)
+      // Handle binary data (e.g., images)
       const buffer = await response.buffer();
-      return res.status(response.status).send(buffer);
+      return res.send(buffer);
     }
   } catch (error) {
     console.error('Proxy error:', error);
