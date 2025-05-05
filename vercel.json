@@ -8,7 +8,10 @@
         "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
         "X-Content-Type-Options": "nosniff",
         "X-Frame-Options": "DENY",
-        "X-XSS-Protection": "1; mode=block"
+        "X-XSS-Protection": "1; mode=block",
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, PATCH, OPTIONS",
+        "Access-Control-Allow-Headers": "X-API-Key, X-Requested-With, Content-Type, Accept"
       },
       "continue": true
     },
