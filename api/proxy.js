@@ -16,15 +16,15 @@ module.exports = async (req, res) => {
     query: req.query,
     headers: req.headers
   });
-
-  // Check for API key in query or headers
-  const apiKey = req.query.apiKey || req.headers['x-api-key'];
-  console.log("API Key validation check - Received key:", apiKey);
-  console.log("API Key validation check - Environment variable exists:", !!process.env.PROXY_API_KEY);
-  if (!apiKey || apiKey !== API_KEY) {
-    console.log("API key check failed. Provided:", apiKey);
-    return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
-  }
+  
+// Check for API key in headers only (not in query)
+const apiKey = req.headers['x-api-key'];
+console.log("API Key validation check - Received key:", apiKey ? "Key present (not shown in logs)" : "No key");
+console.log("API Key validation check - Environment variable exists:", !!process.env.PROXY_API_KEY);
+if (!apiKey || apiKey !== API_KEY) {
+  console.log("API key check failed");
+  return res.status(401).json({ error: 'Unauthorized: Invalid or missing API key' });
+}
 
   // Set CORS headers - use configured origins or default to '*'
   const origin = req.headers.origin;
