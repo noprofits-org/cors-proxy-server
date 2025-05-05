@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Proxy Server</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        h1, h2, h3 {
+            color: #2c3e50;
+        }
+        
+        code, pre {
+            background-color: #f5f5f5;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+        
+        pre {
+            padding: 15px;
+            overflow-x: auto;
+            border: 1px solid #ddd;
+        }
+        
+        .container {
+            margin-bottom: 30px;
+            background: #f9f9f9;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .highlight {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+        
+        .try-it {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #e7f4ff;
+            border-radius: 4px;
+            border-left: 4px solid #3498db;
+        }
+        
+        footer {
+            margin-top: 40px;
+            text-align: center;
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+        
+        a {
+            color: #3498db;
+            text-decoration: none;
+        }
+        
+        a:hover {
+            text-decoration: underline;
+        }
+        
+        .button {
+            display: inline-block;
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 4px;
+            text-decoration: none;
+            margin-top: 10px;
+        }
+        
+        .button:hover {
+            background-color: #2980b9;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>CORS Proxy Server</h1>
+        <p>A simple, general-purpose CORS proxy using Vercel serverless functions</p>
+    </div>
+    
+    <div class="container">
+        <h2>What is this?</h2>
+        <p>This is a CORS proxy that allows you to make requests to APIs that don't support CORS from your frontend applications. It acts as a middleware between your frontend and the target API, adding the necessary CORS headers to enable cross-origin requests.</p>
+        
+        <div class="try-it">
+            <p>📌 Base URL: <code>https://cors-proxy-xi-ten.vercel.app/api/proxy</code></p>
+        </div>
+    </div>
+    
+    <div class="container">
+        <h2>Features</h2>
+        <ul>
+            <li><strong>No Authentication Required</strong> - Open for public use</li>
+            <li><strong>All HTTP Methods Supported</strong> - GET, POST, PUT, PATCH, DELETE, OPTIONS, HEAD</li>
+            <li><strong>Various Content Types</strong> - Handles JSON, text, and binary data (images, etc.)</li>
+            <li><strong>Header Forwarding</strong> - Passes your headers to the target API</li>
+            <li><strong>Error Handling</strong> - Clear error messages for debugging</li>
+            <li><strong>Binary Data Support</strong> - Works with images and other binary responses</li>
+        </ul>
+    </div>
+    
+    <div class="container">
+        <h2>How to Use</h2>
+        
+        <h3>Basic Example (GET request)</h3>
+        <pre><code>const proxyUrl = 'https://cors-proxy-xi-ten.vercel.app/api/proxy';
+const targetUrl = 'https://api.example.com/data';
+
+fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`)
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));</code></pre>
+        
+        <h3>POST Request Example</h3>
+        <pre><code>const proxyUrl = 'https://cors-proxy-xi-ten.vercel.app/api/proxy';
+const targetUrl = 'https://api.example.com/data';
+
+fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ key: 'value' })
+})
+  .then(response => response.json())
+  .then(data => console.log(data))
+  .catch(error => console.error('Error:', error));</code></pre>
+    </div>
+    
+    <div class="container">
+        <h2>Test the Proxy</h2>
+        <p>Want to see it in action? Try our test page to experiment with different requests:</p>
+        <a href="/test-proxy.html" class="button">Open Test Page</a>
+    </div>
+    
+    <div class="container">
+        <h2>Limitations</h2>
+        <ul>
+            <li>This is a general-purpose proxy without authentication</li>
+            <li>Rate limiting is based on Vercel's free tier limits</li>
+            <li>Some APIs may reject requests from proxy servers</li>
+            <li>Large responses might hit Vercel's serverless function size limits</li>
+        </ul>
+    </div>
+    
+    <div class="container">
+        <h2>Use Responsibly</h2>
+        <p>This proxy is provided for development and testing purposes. Please use it responsibly and avoid sending sensitive data through it. If you need a more secure solution, consider deploying your own instance.</p>
+    </div>
+    
+    <footer>
+        <p>Powered by <a href="https://vercel.com" target="_blank">Vercel</a> | <a href="https://github.com/your-username/cors-proxy-server" target="_blank">GitHub Repository</a></p>
+    </footer>
+</body>
+</html>
