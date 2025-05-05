@@ -1,20 +1,19 @@
 {
-    "version": 2,
-    "routes": [
-      { "src": "/api/test", "dest": "/api/test.js" },
-      { "src": "/api/env-test", "dest": "/api/env-test.js" },
-      { "src": "/api/proxy", "dest": "/api/proxy.js" }
-    ],
-    "headers": [
-      {
-        "source": "/api/(.*)",
-        "headers": [
-          { "key": "Content-Encoding", "value": "identity" },
-          { "key": "Cache-Control", "value": "no-store, no-cache, must-revalidate, proxy-revalidate" },
-          { "key": "X-Content-Type-Options", "value": "nosniff" },
-          { "key": "X-Frame-Options", "value": "DENY" },
-          { "key": "X-XSS-Protection", "value": "1; mode=block" }
-        ]
-      }
-    ]
-  }
+  "version": 2,
+  "routes": [
+    { 
+      "src": "/api/(.*)", 
+      "headers": {
+        "Content-Encoding": "identity",
+        "Cache-Control": "no-store, no-cache, must-revalidate, proxy-revalidate",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block"
+      },
+      "continue": true
+    },
+    { "src": "/api/test", "dest": "/api/test.js" },
+    { "src": "/api/env-test", "dest": "/api/env-test.js" },
+    { "src": "/api/proxy", "dest": "/api/proxy.js" }
+  ]
+}
