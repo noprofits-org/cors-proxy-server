@@ -1,7 +1,7 @@
 const fetch = require('node-fetch');
 
 // API key for basic authentication (set in Vercel environment variables)
-const API_KEY = process.env.PROXY_API_KEY || 'your-default-api-key';
+const API_KEY = process.env.PROXY_API_KEY;
 
 // Define allowed origins (can be customized via environment variables)
 const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS ?
