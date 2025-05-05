@@ -33,7 +33,7 @@ module.exports = async (req, res) => {
       return res.status(400).json({ error: 'URL parameter is required' });
     }
 
-    // Prepare fetch options by cloning the request
+    // Prepare fetch options
     const fetchOptions = {
       method: req.method,
       headers: {}
@@ -47,16 +47,29 @@ module.exports = async (req, res) => {
       }
     }
 
-    // Forward the request body for methods that support it
-    if (['POST', 'PUT', 'PATCH'].includes(req.method) && req.body) {
-      // Convert body to string if it's an object
-      if (typeof req.body === 'object') {
-        fetchOptions.body = JSON.stringify(req.body);
-        if (!fetchOptions.headers['content-type']) {
-          fetchOptions.headers['content-type'] = 'application/json';
+    // Critical change: Handle body differently based on request method
+    // We need to avoid accessing req.body directly which can cause the "body used already" error
+    if (['POST', 'PUT', 'PATCH'].includes(req.method)) {
+      // Instead of directly using req.body, we'll manually reconstruct it from the raw request
+      let bodyData = '';
+      
+      // For Vercel Edge Functions environment
+      if (req.body && typeof req.body !== 'string') {
+        if (Buffer.isBuffer(req.body)) {
+          bodyData = req.body.toString();
+        } else {
+          try {
+            bodyData = JSON.stringify(req.body);
+          } catch (e) {
+            console.error('Error stringifying body:', e);
+          }
         }
-      } else {
-        fetchOptions.body = req.body;
+      } else if (req.body) {
+        bodyData = req.body;
+      }
+      
+      if (bodyData) {
+        fetchOptions.body = bodyData;
       }
     }
 
