@@ -81,15 +81,47 @@
             border-radius: 4px;
             text-decoration: none;
             margin-top: 10px;
+            margin-right: 10px;
         }
         
         .button:hover {
             background-color: #2980b9;
             text-decoration: none;
         }
+        
+        .dashboard-button {
+            background-color: #27ae60;
+        }
+        
+        .dashboard-button:hover {
+            background-color: #219653;
+        }
+        
+        .buttons-container {
+            margin-top: 15px;
+        }
+        
+        .nav {
+            display: flex;
+            justify-content: flex-end;
+            padding: 10px 0;
+        }
+        
+        .nav a {
+            margin-left: 15px;
+        }
+        
+        .monitor-container {
+            background-color: #e8f5e9;
+            border-left: 4px solid #27ae60;
+        }
     </style>
 </head>
 <body>
+    <div class="nav">
+        <a href="/dashboard.html" class="dashboard-button button">View Dashboard</a>
+    </div>
+    
     <div class="header">
         <h1>CORS Proxy Server</h1>
         <p>A simple, general-purpose CORS proxy using Vercel serverless functions</p>
@@ -145,9 +177,25 @@ fetch(`${proxyUrl}?url=${encodeURIComponent(targetUrl)}`, {
     </div>
     
     <div class="container">
-        <h2>Test the Proxy</h2>
-        <p>Want to see it in action? Try our test page to experiment with different requests:</p>
-        <a href="https://noprofits.org/cors-tester/" class="button">Open Test Page</a>
+        <h2>Test and Monitor</h2>
+        <p>Want to see the proxy in action or monitor its usage?</p>
+        <div class="buttons-container">
+            <a href="https://noprofits.org/cors-tester/" class="button">Open Test Page</a>
+            <a href="/dashboard.html" class="button dashboard-button">View Traffic Dashboard</a>
+        </div>
+    </div>
+    
+    <div class="container monitor-container">
+        <h2>Monitor Proxy Traffic</h2>
+        <p>We've added a new monitoring dashboard that provides insights into the proxy's usage patterns, popular target domains, and performance metrics.</p>
+        <p>Use the dashboard to:</p>
+        <ul>
+            <li>View real-time traffic statistics</li>
+            <li>Identify the most frequently requested domains</li>
+            <li>Monitor response times and success rates</li>
+            <li>Track usage of different HTTP methods</li>
+        </ul>
+        <a href="/dashboard.html" class="button dashboard-button">Open Dashboard</a>
     </div>
     
     <div class="container">
