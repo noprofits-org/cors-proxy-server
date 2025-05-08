@@ -1,72 +1,112 @@
-// logs.js - API endpoint for retrieving proxy logs
-// This file should be placed in the /api directory alongside proxy.js
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Proxy Monitoring Dashboard</title>
+    <link rel="stylesheet" href="dashboard.css">
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.0/dist/chart.min.js"></script>
+</head>
+<body>
+    <header>
+        <h1>CORS Proxy Monitoring Dashboard</h1>
+        <div class="controls">
+            <div class="control-group">
+                <label for="timeframe">Timeframe:</label>
+                <select id="timeframe">
+                    <option value="15">Last 15 minutes</option>
+                    <option value="60" selected>Last hour</option>
+                    <option value="360">Last 6 hours</option>
+                    <option value="1440">Last 24 hours</option>
+                    <option value="0">All time</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label for="domain-filter">Filter by domain:</label>
+                <input type="text" id="domain-filter" placeholder="e.g., api.example.com">
+            </div>
+            <button id="refresh-btn">Refresh Data</button>
+        </div>
+    </header>
 
-const logger = require('./logger');
+    <main>
+        <div class="dashboard-grid">
+            <!-- Summary Stats -->
+            <section class="dashboard-card" id="summary-stats">
+                <h2>Summary Statistics</h2>
+                <div class="stats-container">
+                    <div class="stat-box">
+                        <span class="stat-value" id="total-requests">0</span>
+                        <span class="stat-label">Total Requests</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="avg-response-time">0ms</span>
+                        <span class="stat-label">Avg Response Time</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="success-rate">0%</span>
+                        <span class="stat-label">Success Rate</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="total-data">0 KB</span>
+                        <span class="stat-label">Total Data</span>
+                    </div>
+                </div>
+            </section>
 
-module.exports = async (req, res) => {
-  // Set CORS headers to allow dashboard access
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  // Handle preflight requests
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
+            <!-- Traffic Over Time Chart -->
+            <section class="dashboard-card">
+                <h2>Traffic Over Time</h2>
+                <div class="chart-container">
+                    <canvas id="traffic-chart"></canvas>
+                </div>
+            </section>
 
-  // Only allow GET requests
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
+            <!-- Top Domains Chart -->
+            <section class="dashboard-card">
+                <h2>Top Requested Domains</h2>
+                <div class="chart-container">
+                    <canvas id="domains-chart"></canvas>
+                </div>
+            </section>
 
-  try {
-    // Basic authentication (optional but recommended for production)
-    // Uncomment and modify if you want to add auth
-    /*
-    const authHeader = req.headers.authorization;
-    if (!authHeader || authHeader !== 'Bearer YOUR_SECRET_TOKEN') {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    */
+            <!-- Method Distribution Chart -->
+            <section class="dashboard-card">
+                <h2>HTTP Methods</h2>
+                <div class="chart-container">
+                    <canvas id="methods-chart"></canvas>
+                </div>
+            </section>
 
-    // Get logs with optional filtering
-    const logs = logger.getRequestLogs();
-    
-    // Apply simple filtering if query parameters are provided
-    let filteredLogs = [...logs];
-    
-    // Filter by target domain if specified
-    if (req.query.domain) {
-      const domainFilter = req.query.domain.toLowerCase();
-      filteredLogs = filteredLogs.filter(log => {
-        try {
-          const url = new URL(log.targetUrl);
-          return url.hostname.includes(domainFilter);
-        } catch (e) {
-          return false;
-        }
-      });
-    }
-    
-    // Filter by timeframe if specified (in minutes)
-    if (req.query.timeframe) {
-      const timeframeMinutes = parseInt(req.query.timeframe, 10);
-      if (!isNaN(timeframeMinutes)) {
-        const cutoffTime = new Date(Date.now() - timeframeMinutes * 60 * 1000);
-        filteredLogs = filteredLogs.filter(log => new Date(log.timestamp) >= cutoffTime);
-      }
-    }
-    
-    // Return the filtered logs
-    return res.status(200).json({
-      total: filteredLogs.length,
-      logs: filteredLogs
-    });
-  } catch (error) {
-    console.error('Error retrieving logs:', error);
-    return res.status(500).json({
-      error: 'Failed to retrieve logs',
-      message: error.message
-    });
-  }
-};
+            <!-- Recent Requests Table -->
+            <section class="dashboard-card" id="recent-requests">
+                <h2>Recent Requests</h2>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Time</th>
+                                <th>Method</th>
+                                <th>Domain</th>
+                                <th>Status</th>
+                                <th>Response Time</th>
+                                <th>Size</th>
+                            </tr>
+                        </thead>
+                        <tbody id="requests-table-body">
+                            <!-- Request rows will be populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <p>CORS Proxy Monitoring Dashboard - Created for scientific study purposes</p>
+    </footer>
+
+    <script src="dashboard.js"></script>
+</body>
+</html>
