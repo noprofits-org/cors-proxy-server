@@ -16,6 +16,13 @@
     },
     { "src": "/api/test", "dest": "/api/test.js" },
     { "src": "/api/env-test", "dest": "/api/env-test.js" },
-    { "src": "/api/proxy", "dest": "/api/proxy.js" }
+    { "src": "/api/proxy", "dest": "/api/proxy.js" },
+    { "src": "/api/logs", "dest": "/api/logs.js" },
+    
+    { "handle": "filesystem" },
+    
+    { "src": "/dashboard", "dest": "/dashboard.html" },
+    { "src": "/", "dest": "/index.html" },
+    { "src": "/(.*)", "dest": "/$1" }
   ]
 }
