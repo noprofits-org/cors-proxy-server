@@ -1,7 +1,6 @@
 // api/debug-proxy.js
 // A modified version of proxy.js with extra logging
 
-const fetch = require('node-fetch');
 const logger = require('./logger');
 
 module.exports = async (req, res) => {
@@ -77,7 +76,8 @@ module.exports = async (req, res) => {
       
       return res.status(response.status).json(data);
     } else if (contentType.includes('image/')) {
-      data = await response.buffer();
+      const arrayBuffer = await response.arrayBuffer();
+      data = Buffer.from(arrayBuffer);
       responseSize = data.length;
       
       // Log before returning
