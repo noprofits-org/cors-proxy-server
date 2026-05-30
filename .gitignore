@@ -1,1 +1,16 @@
+# Vercel
 .vercel
+
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# OS / editor cruft
+.DS_Store
+*.log
+.idea/
+.vscode/
