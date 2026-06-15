@@ -98,6 +98,29 @@ Additional hardening that is always on, regardless of config:
   RFC1918 ranges, `169.254.169.254`, `metadata.google.internal`) as SSRF
   defense-in-depth, even if an allowlist entry is too broad.
 
+## Resilience
+
+The proxy adds a reliability layer around the upstream request (tunable via env vars):
+
+- **Explicit fetch timeout** — `FETCH_TIMEOUT_MS` (default `8000`), kept under Vercel's
+  `maxDuration` 10s so the client gets a clean `504` rather than a hard function cut-off.
+- **Retry with backoff** — transient upstream failures (network error, `429`, `5xx`) are
+  retried up to `MAX_ATTEMPTS` (default `3`) with exponential backoff + jitter, bounded by
+  `OVERALL_BUDGET_MS` (default `9000`). Honors a small upstream `Retry-After` on `429`.
+  Non-transient responses (incl. `4xx`) are returned immediately, never retried.
+- **Response cache** — deterministic `GET` responses with a `2xx` status are cached for
+  `CACHE_TTL_MS` (default 1h), up to `CACHE_MAX` entries (LRU). Failures are never cached.
+  `X-Proxy-Cache: HIT|MISS` reports cache status. **Per warm instance, not global** —
+  Vercel functions are ephemeral; a globally-shared cache would need Vercel KV / Upstash.
+- **Rate limiting** — fixed-window `RATE_LIMIT` requests (default `60`) per `RATE_WINDOW_MS`
+  (default 60s) per client IP; over-limit returns `429` + `Retry-After`. Also per warm
+  instance. `X-RateLimit-Remaining` is reported on every response.
+
+### Health check
+
+`GET /api/health` returns `200` with `{ status: "ok", uptimeSeconds, targetsLocked,
+originsLocked, allowedTargets }` — no upstream call, for connectivity/liveness pings.
+
 ## Deploy Your Own
 
 ### Prerequisites
