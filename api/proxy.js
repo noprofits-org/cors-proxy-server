@@ -1,4 +1,3 @@
-const logger = require('./logger');
 const security = require('./security');
 const resilience = require('./resilience');
 
@@ -45,7 +44,6 @@ module.exports = async (req, res) => {
       if (hit) {
         res.setHeader('X-Proxy-Cache', 'HIT');
         if (hit.contentType) res.setHeader('Content-Type', hit.contentType);
-        await logger.logRequest(req, targetUrl, startTime, hit.status, hit.body.length);
         return res.status(hit.status).send(hit.body);
       }
       res.setHeader('X-Proxy-Cache', 'MISS');
@@ -74,14 +72,10 @@ module.exports = async (req, res) => {
       resilience.cacheSet(cacheKey, { status, contentType, body });
     }
 
-    await logger.logRequest(req, targetUrl, startTime, status, body.length);
     if (contentType) res.setHeader('Content-Type', contentType);
     return res.status(status).send(body);
   } catch (error) {
     console.error('Proxy error:', error);
-    if (targetUrl) {
-      await logger.logRequest(req, targetUrl, startTime, 504, 0);
-    }
     // Timeout / budget-exhaustion -> 504 so the client gets a clean, retryable
     // signal instead of a hard function cut-off or a misleading 500.
     const timedOut = error.exhausted || error.name === 'AbortError';

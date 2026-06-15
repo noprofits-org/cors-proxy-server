@@ -1,5 +1,5 @@
 // security.js - shared allowlist + target validation for the CORS proxy.
-// Sits alongside logger.js as a required helper (not a route handler).
+// A required helper module (not a route handler), used by proxy.js and health.js.
 //
 // Locked-by-default allowlists. Override per-deployment with env vars
 // (comma-separated). A fork that wants a general-purpose open proxy can set
