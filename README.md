@@ -77,9 +77,26 @@ Headers from your request will be forwarded to the target API, except for header
 
 ## Configuration Options
 
-You can configure the proxy using environment variables in your Vercel deployment:
+This proxy is **locked down by default** — it only forwards to an allowlisted set of
+target hosts and only serves an allowlisted set of browser origins. Everything else
+gets a `403`. Configure it with environment variables in your Vercel deployment
+(comma-separated lists):
 
-- `ALLOWED_ORIGINS` - Comma-separated list of allowed origins for CORS (default: '*')
+- `ALLOWED_TARGETS` — host allowlist for the `?url=` target. A request's host must
+  equal an entry or be a subdomain of one. Default:
+  `projects.propublica.org,collectionapi.metmuseum.org`. Set to `*` for an open
+  (general-purpose) proxy.
+- `ALLOWED_ORIGINS` — host allowlist for the browser `Origin`. Matched as exact host
+  or subdomain; `localhost`/`127.0.0.1` are always allowed for local dev. The matching
+  origin is echoed back in `Access-Control-Allow-Origin` (never a blanket `*`).
+  Default: `noprofits.org` (covers `*.noprofits.org`). Set to `*` to allow any origin.
+
+Additional hardening that is always on, regardless of config:
+
+- Only `https:` targets are accepted.
+- Internal / cloud-metadata targets are always blocked (`localhost`, loopback,
+  RFC1918 ranges, `169.254.169.254`, `metadata.google.internal`) as SSRF
+  defense-in-depth, even if an allowlist entry is too broad.
 
 ## Deploy Your Own
 
@@ -155,10 +172,13 @@ vercel dev
 
 When using this proxy, be aware that:
 
-1. This proxy has no built-in authentication, so it's open for public use
-2. Consider deploying your own instance if you need more security
-3. Be aware that Vercel logs may contain information from proxied requests
-4. Use for development and testing purposes, not for sensitive production data
+1. This proxy has no per-user authentication; access is controlled by the target and
+   origin allowlists (see Configuration Options), not by credentials.
+2. The defaults are locked to the noprofits.org sites — fork and set `ALLOWED_TARGETS` /
+   `ALLOWED_ORIGINS` for your own deployment.
+3. Be aware that Vercel logs may contain information from proxied requests.
+4. Opening the allowlists with `*` turns this back into an open relay (SSRF / quota
+   abuse risk); do so only for trusted/dev deployments.
 
 ## License
 
